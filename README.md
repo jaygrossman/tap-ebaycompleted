@@ -15,6 +15,7 @@ This is a fun learning project with the goal to read in search results of eBay's
 ## Usage
 
 **Install**
+
 I suggest running this is a python virtual environment:
 
 ```bash
@@ -29,6 +30,7 @@ deactivate
 ```
 
 **Create a configuration file**
+
 There is a template you can use at `config.json.example`, just copy it to `config.json` in the repo root and update the following values:
 ```json
 {
