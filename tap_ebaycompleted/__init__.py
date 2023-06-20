@@ -20,7 +20,7 @@ def get_schema():
         "title": {"type": "string"},
         "price": {"type": "string"},
         "bids": {"type": "string"},
-        "buy_it_now": {"boolean": "string"},
+        "buy_it_now": {"type": "boolean"},
         "condition": {"type": "string"},
         "image": {"type": "string"},
         "link": {"type": "string"},
