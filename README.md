@@ -39,9 +39,8 @@ There is a template you can use at `config.json.example`, just copy it to `confi
 }
 ```
 
-| Syntax | Description |
-| ----------- | ----------- |
 | Variable | Description |
+| ----------- | ----------- |
 | seacrh_terms | list of terms that the tap will search for **REQUIRED** |
 | page_size | number of records to return - values can be 240,120,60 |
 | min_wait | minimum amount of time between searches, default is 2 seconds |
