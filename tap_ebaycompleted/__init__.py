@@ -24,6 +24,8 @@ def get_schema():
         "condition": {"type": "string"},
         "image": {"type": "string"},
         "link": {"type": "string"},
+        "end_date": {"type": "string"},
+        "has_sold": {"boolean": "string"},
         "id": {"type": "string"}
         }
      }
@@ -84,7 +86,17 @@ def sync(config):
                 if listing.find("span", class_="s-item__dynamic s-item__buyItNowOption").text == "Buy It Now":
                     buy_it_now = True
             except:
-                buy_it_now = False
+                buy_it_now = False   
+            
+            has_sold = False
+            try:
+                if listing.find("div", class_="s-item__title--tag").find("span", class_="clipped").text == "Sold Item":
+                    has_sold = True
+                    end_date=listing.find("div", class_="s-item__title--tag").find("span", class_="POSITIVE").text.replace("Sold  ", "")
+                else:
+                    end_date = listing.find("div", class_="s-item__title--tag").find("span", class_="NEGATIVE").text.replace("Ended  ", "")
+            except:
+                end_date=""
 
             if "Shop on eBay" not in title:
                 record = {
@@ -95,7 +107,9 @@ def sync(config):
                     "link": link,
                     "id": id,
                     "bids": bids,
-                    "buy_it_now": buy_it_now
+                    "buy_it_now": buy_it_now,
+                    "end_date": end_date,
+                    "has_sold": has_sold
                 }
 
                 # The singer.write_records function takes a list as the second param, this was not obvious
