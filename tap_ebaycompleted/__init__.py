@@ -17,6 +17,7 @@ LOGGER = singer.get_logger()
 def get_schema():
     schema = {
         "properties": {
+        "search_term": {"type": "string"},
         "title": {"type": "string"},
         "price": {"type": "string"},
         "bids": {"type": "string"},
@@ -100,6 +101,7 @@ def sync(config):
 
             if "Shop on eBay" not in title:
                 record = {
+                    "search_term": search_term,
                     "title": title,
                     "price": price,
                     "condition": condition,

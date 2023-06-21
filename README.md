@@ -62,6 +62,7 @@ Below is a sample record representing a completed item:
     "stream": 
     "completed_item_schema", 
     "record": {
+        "search_term": "iphone 13", 
         "title": "Apple iPhone 13 - 128GB - Midnight", 
         "price": "$411.00", 
         "condition": "Pre-Owned", 
