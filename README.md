@@ -69,7 +69,9 @@ Below is a sample record representing a completed item:
         "link": "https://www.ebay.com/itm/314645218752", 
         "id": "314645218752", 
         "bids": "", 
-        "buy_it_now": false
+        "buy_it_now": false, 
+        "end_date": "Jun 20, 2023", 
+        "has_sold": true
     }
 }
 ```
