@@ -26,11 +26,68 @@ def get_schema():
         "image": {"type": "string"},
         "link": {"type": "string"},
         "end_date": {"type": "string"},
-        "has_sold": {"boolean": "string"},
+        "has_sold": {"type": "boolean"},
         "id": {"type": "string"}
         }
      }
     return schema
+
+def parse_search_results_page(schema_name, search_term, url):
+    response = requests.get(url)
+    html_content = str(response.content).replace("<!--F#f_0-->", "").replace("<!--F/-->", "").replace("<span role=heading aria-level=3>", "")
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    listings = soup.find_all("li", class_="s-item s-item__pl-on-bottom")
+    
+    # Iterate over completed listings
+    for listing in listings:
+
+        title = listing.find("div", class_="s-item__title").text
+        price = listing.find("span", class_="s-item__price").text
+        condition = listing.find("span", class_="SECONDARY_INFO").text
+        image= listing.find("img")['src']
+        link = listing.find("a", class_="s-item__link")['href']
+        id = link[0:link.index("?")].replace("https://www.ebay.com/itm/", "")
+        bids = ""
+        try:
+            bids = listing.find("span", class_="s-item__bids s-item__bidCount").text
+        except:
+            bids = ""
+        buy_it_now = False
+        try:
+            if listing.find("span", class_="s-item__dynamic s-item__buyItNowOption").text == "Buy It Now":
+                buy_it_now = True
+        except:
+            buy_it_now = False   
+        
+        has_sold = False
+        try:
+            if listing.find("div", class_="s-item__title--tag").find("span", class_="clipped").text == "Sold Item":
+                has_sold = True
+                end_date=listing.find("div", class_="s-item__title--tag").find("span", class_="POSITIVE").text.replace("Sold  ", "")
+            else:
+                end_date = listing.find("div", class_="s-item__title--tag").find("span", class_="NEGATIVE").text.replace("Ended  ", "")
+        except:
+            end_date=""
+
+        if "Shop on eBay" not in title:
+            record = {
+                "search_term": search_term,
+                "title": title,
+                "price": price,
+                "condition": condition,
+                "image": image,
+                "link": link,
+                "id": id,
+                "bids": bids,
+                "buy_it_now": buy_it_now,
+                "end_date": end_date,
+                "has_sold": has_sold
+            }
+
+            # The singer.write_records function takes a list as the second param, this was not obvious
+            singer.write_records(schema_name, [record])
+
 
 def sync(config):
     """ Sync data from tap source """
@@ -47,6 +104,12 @@ def sync(config):
     except:
         page_size = 120
 
+    max_pages = 1
+    try:
+        max_pages = int(config['max_pages'])
+    except:
+        max_pages = 1
+
     try:
         min_wait = config['min_wait']
         if min_wait <2:
@@ -61,61 +124,26 @@ def sync(config):
     # Iterate over search terms
     for search_term in config['search_terms']:
         time.sleep(random.uniform(min_wait, max_wait))
+        current_page = 1
+        total_pages = 1
+        total_records = 0
+
         #print("-- searching for items for search term: {}".format(search_term))
         url = f"https://www.ebay.com/sch/i.html?LH_Complete=1&_sop=13&_ipg={page_size}&_nkw={search_term}"
         response = requests.get(url)
         html_content = str(response.content).replace("<!--F#f_0-->", "").replace("<!--F/-->", "").replace("<span role=heading aria-level=3>", "")
         soup = BeautifulSoup(html_content, "html.parser")
+        
+        try:
+            total_records = soup.find("h1", class_="srp-controls__count-heading").find("span", class_="BOLD").text
+            total_records = total_records.replace(",", "").replace("+", "")
+            total_pages = int(int(total_records)/page_size)
+        except:
+            total_pages = 1
 
-        listings = soup.find_all("li", class_="s-item s-item__pl-on-bottom")
-     
-        # Iterate over completed listings
-        for listing in listings:
-            title = listing.find("div", class_="s-item__title").text
-            price = listing.find("span", class_="s-item__price").text
-            condition = listing.find("span", class_="SECONDARY_INFO").text
-            image= listing.find("img")['src']
-            link = listing.find("a", class_="s-item__link")['href']
-            id = link[0:link.index("?")].replace("https://www.ebay.com/itm/", "")
-            bids = ""
-            try:
-                bids = listing.find("span", class_="s-item__bids s-item__bidCount").text
-            except:
-                bids = ""
-            buy_it_now = False
-            try:
-                if listing.find("span", class_="s-item__dynamic s-item__buyItNowOption").text == "Buy It Now":
-                    buy_it_now = True
-            except:
-                buy_it_now = False   
-            
-            has_sold = False
-            try:
-                if listing.find("div", class_="s-item__title--tag").find("span", class_="clipped").text == "Sold Item":
-                    has_sold = True
-                    end_date=listing.find("div", class_="s-item__title--tag").find("span", class_="POSITIVE").text.replace("Sold  ", "")
-                else:
-                    end_date = listing.find("div", class_="s-item__title--tag").find("span", class_="NEGATIVE").text.replace("Ended  ", "")
-            except:
-                end_date=""
-
-            if "Shop on eBay" not in title:
-                record = {
-                    "search_term": search_term,
-                    "title": title,
-                    "price": price,
-                    "condition": condition,
-                    "image": image,
-                    "link": link,
-                    "id": id,
-                    "bids": bids,
-                    "buy_it_now": buy_it_now,
-                    "end_date": end_date,
-                    "has_sold": has_sold
-                }
-
-                # The singer.write_records function takes a list as the second param, this was not obvious
-                singer.write_records("completed_item_schema", [record])
+        while current_page <= total_pages and current_page <= max_pages:
+                parse_search_results_page("completed_item_schema", search_term, "{}&_pgn={}".format(url, current_page))
+                current_page=current_page+1
                 
 @utils.handle_top_exception(LOGGER)
 def main():
