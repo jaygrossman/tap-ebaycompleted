@@ -45,6 +45,7 @@ There is a template you can use at `config.json.example`, just copy it to `confi
 | ----------- | ----------- |
 | seacrh_terms | list of terms that the tap will search for **REQUIRED** |
 | page_size | number of records to return - values can be 240,120,60 |
+| max_pages | maximum number of search result pages to capture results from, default is 1 |
 | min_wait | minimum amount of time between searches, default is 2 seconds |
 | max_wait | maximum amount of time between searches, default is 5 seconds |
 
@@ -92,3 +93,16 @@ deactivate
 ```bash
 ~/.virtualenvs/tap-ebaycompleted/bin/tap-ebaycompleted -c config.json.example | ~/.virtualenvs/target-csv/bin/target-csv 
 ```
+
+## Change Log
+
+**June 21, 2023**
+Added 3 attributes to schema 
+| attribute | Description |
+| ----------- | ----------- |
+| end_date | date the item listing ended |
+| has_sold | indicates if the listing ended in a sale |
+| seacrh_term | term used to search for the completed item |
+
+**June 27, 2023**
+Added functionality to support capturing results from multiple pages. In the `config.json.example` file, the `max_pages` variable indiciates the maximum number of search result pages to capture results from. The default=1, the maximum value = 10.
