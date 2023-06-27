@@ -97,6 +97,7 @@ deactivate
 ## Change Log
 
 **June 21, 2023**
+
 Added 3 attributes to schema 
 | attribute | Description |
 | ----------- | ----------- |
@@ -105,4 +106,5 @@ Added 3 attributes to schema
 | seacrh_term | term used to search for the completed item |
 
 **June 27, 2023**
+
 Added functionality to support capturing results from multiple pages. In the `config.json.example` file, the `max_pages` variable indiciates the maximum number of search result pages to capture results from. The default=1, the maximum value = 10.
