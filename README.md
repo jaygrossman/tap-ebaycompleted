@@ -36,6 +36,7 @@ There is a template you can use at `config.json.example`, just copy it to `confi
 {
   "search_terms": ["iphone 13", "iphone 14"],
   "page_size": 240,
+  "max_pages": 1,
   "min_wait": 2.1,
   "max_wait": 4.4
 }
