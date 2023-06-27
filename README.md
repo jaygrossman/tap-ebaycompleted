@@ -103,7 +103,7 @@ Added 3 attributes to schema
 | ----------- | ----------- |
 | end_date | date the item listing ended |
 | has_sold | indicates if the listing ended in a sale |
-| seacrh_term | term used to search for the completed item |
+| search_term | term used to search for the completed item |
 
 **June 27, 2023**
 
