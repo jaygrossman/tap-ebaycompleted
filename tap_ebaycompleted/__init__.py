@@ -10,7 +10,7 @@ import random
 import requests
 import time
 
-REQUIRED_CONFIG_KEYS = ["search_terms"]
+REQUIRED_CONFIG_KEYS = []
 LOGGER = singer.get_logger()
 
 
@@ -25,14 +25,15 @@ def get_schema():
         "condition": {"type": "string"},
         "image": {"type": "string"},
         "link": {"type": "string"},
+        "ebay_id": {"type": "string"},
         "end_date": {"type": "string"},
         "has_sold": {"type": "boolean"},
-        "id": {"type": "string"}
+        "sku": {"type": "string"}
         }
      }
     return schema
 
-def parse_search_results_page(schema_name, search_term, url):
+def parse_search_results_page(schema_name, search_term, sku, url):
     response = requests.get(url)
     html_content = str(response.content).replace("<!--F#f_0-->", "").replace("<!--F/-->", "").replace("<span role=heading aria-level=3>", "")
     soup = BeautifulSoup(html_content, "html.parser")
@@ -44,10 +45,14 @@ def parse_search_results_page(schema_name, search_term, url):
 
         title = listing.find("div", class_="s-item__title").text
         price = listing.find("span", class_="s-item__price").text
-        condition = listing.find("span", class_="SECONDARY_INFO").text
+        try:
+            condition = listing.find("span", class_="SECONDARY_INFO").text
+        except:
+            condition = ""
         image= listing.find("img")['src']
         link = listing.find("a", class_="s-item__link")['href']
-        id = link[0:link.index("?")].replace("https://www.ebay.com/itm/", "")
+        ebay_id = link[0:link.index("?")].replace("https://www.ebay.com/itm/", "")
+        link = "https://www.ebay.com/itm/{}".format(ebay_id)
         bids = ""
         try:
             bids = listing.find("span", class_="s-item__bids s-item__bidCount").text
@@ -75,17 +80,17 @@ def parse_search_results_page(schema_name, search_term, url):
                 "search_term": search_term,
                 "title": title,
                 "price": price,
+                "bids": bids,
+                "buy_it_now": buy_it_now,
                 "condition": condition,
                 "image": image,
                 "link": link,
-                "id": id,
-                "bids": bids,
-                "buy_it_now": buy_it_now,
+                "ebay_id": ebay_id,
                 "end_date": end_date,
-                "has_sold": has_sold
+                "has_sold": has_sold,
+                "sku": sku
             }
 
-            # The singer.write_records function takes a list as the second param, this was not obvious
             singer.write_records(schema_name, [record])
 
 
@@ -107,6 +112,8 @@ def sync(config):
     max_pages = 1
     try:
         max_pages = int(config['max_pages'])
+        if max_pages > 10:
+            max_pages = 10
     except:
         max_pages = 1
 
@@ -121,14 +128,42 @@ def sync(config):
         min_wait = 2
         max_wait = 5
 
+
+    use_feed = False
+    search_terms = config['search_terms']
+
+    try:
+        if 'feed' in config:
+            sku_field_name = 'sku'
+            search_term_field_name = 'search_term'
+            if 'sku_field_name' in config['feed']:
+                sku_field_name = config['feed']['sku_field_name']
+            if 'search_term_field_name' in config['feed']:
+                search_term_field_name = config['feed']['search_term_field_name']
+            var = requests.get(config['feed']['url'])
+            search_terms = json.loads(var.text, strict=False)
+            use_feed = True
+    except:
+        use_feed = False
+        search_terms = config['search_terms']
+
     # Iterate over search terms
-    for search_term in config['search_terms']:
+    for row in search_terms:
+        if use_feed == True:
+            search_term = row[search_term_field_name]
+            sku = str(row[sku_field_name])
+        else:
+            search_term = row
+            sku = ""
         time.sleep(random.uniform(min_wait, max_wait))
         current_page = 1
         total_pages = 1
         total_records = 0
+        
+        if "exclude_terms" in config:
+            for exclude_term in config['exclude_terms']:
+                search_term = search_term + " -" + exclude_term
 
-        #print("-- searching for items for search term: {}".format(search_term))
         url = f"https://www.ebay.com/sch/i.html?LH_Complete=1&_sop=13&_ipg={page_size}&_nkw={search_term}"
         response = requests.get(url)
         html_content = str(response.content).replace("<!--F#f_0-->", "").replace("<!--F/-->", "").replace("<span role=heading aria-level=3>", "")
@@ -137,19 +172,22 @@ def sync(config):
         try:
             total_records = soup.find("h1", class_="srp-controls__count-heading").find("span", class_="BOLD").text
             total_records = total_records.replace(",", "").replace("+", "")
-            total_pages = int(int(total_records)/page_size)
+            if total_records>page_size:
+                total_pages = int(int(total_records)/page_size)
         except:
             total_pages = 1
-
         while current_page <= total_pages and current_page <= max_pages:
-                parse_search_results_page("completed_item_schema", search_term, "{}&_pgn={}".format(url, current_page))
+                parse_search_results_page("completed_item_schema", search_term, sku, "{}&_pgn={}".format(url, current_page))
                 current_page=current_page+1
-                
+    
 @utils.handle_top_exception(LOGGER)
 def main():
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
+    if 'search_terms' not in args.config and 'feed' not in args.config:
+        raise Exception("You must either define a feed or a search term in the config.")
+    elif 'feed' in args.config and 'url' not in args.config['feed']:
+        raise Exception("You must define a url in the feed config.")
     sync(args.config)
-
 
 if __name__ == "__main__":
     main()

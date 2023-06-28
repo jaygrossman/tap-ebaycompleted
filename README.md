@@ -34,7 +34,13 @@ deactivate
 There is a template you can use at `config.json.example`, just copy it to `config.json` in the repo root and update the following values:
 ```json
 {
+  "feed" : {
+    "url" : "http://some_site_url/search_term_feed/",
+    "search_term_field_name" : "search_term",
+    "sku_field_name" : "sku"
+  },
   "search_terms": ["iphone 13", "iphone 14"],
+  "exclude_terms": ["case", "accessories"],
   "page_size": 240,
   "max_pages": 1,
   "min_wait": 2.1,
@@ -44,11 +50,26 @@ There is a template you can use at `config.json.example`, just copy it to `confi
 
 | Variable | Description |
 | ----------- | ----------- |
-| search_terms | list of terms that the tap will search for **REQUIRED** |
+| feed > url | url to json feed of search terms + skus |
+| feed > search_term_field_name | name of the search term field in feed's json payload, default is "search_term" |
+| feed > sku_field_name | name of the sku field in feed's json payload, default is "sku" |
+| search_terms | list of terms that the tap will search for |
+| exclude_terms | list of terms that will filter out results in the search |
 | page_size | number of records to return - values can be 240,120,60 |
 | max_pages | maximum number of search result pages to capture results from, default is 1 |
 | min_wait | minimum amount of time between searches, default is 2 seconds |
 | max_wait | maximum amount of time between searches, default is 5 seconds |
+
+`Please Note:` 
+1) You must define either *feed url* or *search_terms*
+2) If the *feed url* is defined, it will be used. If it is not, the tap will use the *search_terms*.
+3) this is the expected format for the payload of the JSON feed:
+```json
+[
+    { "sku":12345, "search_term": "iphone 13" },
+    { "sku":12346, "search_term": "iphone 14" }
+]
+```
 
 **Run the application to generate a catalog.**
 ```bash
@@ -70,7 +91,7 @@ Below is a sample record representing a completed item:
         "condition": "Pre-Owned", 
         "image": "https://shorturl.at/bqrsK", 
         "link": "https://www.ebay.com/itm/314645218752", 
-        "id": "314645218752", 
+        "ebay_id": "314645218752", 
         "bids": "", 
         "buy_it_now": false, 
         "end_date": "Jun 20, 2023", 
@@ -99,8 +120,8 @@ deactivate
 
 **June 21, 2023**
 
-Added 3 attributes to schema 
-| attribute | Description |
+Added 3 elements to the ouput schema:
+| Element | Description |
 | ----------- | ----------- |
 | end_date | date the item listing ended |
 | has_sold | indicates if the listing ended in a sale |
@@ -108,4 +129,11 @@ Added 3 attributes to schema
 
 **June 27, 2023**
 
-Added functionality to support capturing results from multiple pages. In the `config.json.example` file, the `max_pages` variable indiciates the maximum number of search result pages to capture results from. The default=1, the maximum value = 10.
+Added functionality to support capturing results from multiple pages. In the `config.json.example` file, the *max_pages* variable indiciates the maximum number of search result pages to capture results from. The default=1, the maximum value = 10.
+
+**June 28, 2023**
+
+1. Changed the name of element in the output schema from *id* to *ebay_id*.
+2. Added *exclude_terms* element to the the output schema. It is an opitonal list of terms that will filter out results in the search.
+3. Added *sku* element to the the output schema. This could correspond to an item in your product catalog.
+4. Added functionality to support getting search_terms (and skus) from a JSON feed url. (configured by setting the *feed* variable in the `config.json.example` file).

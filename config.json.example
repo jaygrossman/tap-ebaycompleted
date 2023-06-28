@@ -1,5 +1,11 @@
 {
+"feed" : {
+    "url" : "http://some_site_url/search_term_feed/",
+    "search_term_field_name" : "search_term",
+    "sku_field_name" : "sku"
+  },
   "search_terms": ["iphone 13", "iphone 14"],
+  "exclude_terms": ["case", "accessories"],
   "page_size": 240,
   "max_pages": 1,
   "min_wait": 2.1,
