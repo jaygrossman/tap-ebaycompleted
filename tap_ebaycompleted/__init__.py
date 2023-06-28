@@ -159,6 +159,11 @@ def sync(config):
         current_page = 1
         total_pages = 1
         total_records = 0
+        
+        if "exclude_terms" in config:
+            for exclude_term in config['exclude_terms']:
+                search_term = search_term + " -" + exclude_term
+
         url = f"https://www.ebay.com/sch/i.html?LH_Complete=1&_sop=13&_ipg={page_size}&_nkw={search_term}"
         response = requests.get(url)
         html_content = str(response.content).replace("<!--F#f_0-->", "").replace("<!--F/-->", "").replace("<span role=heading aria-level=3>", "")

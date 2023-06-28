@@ -40,6 +40,7 @@ There is a template you can use at `config.json.example`, just copy it to `confi
     "sku_field_name" : "sku"
   },
   "search_terms": ["iphone 13", "iphone 14"],
+  "exclude_terms": ["case", "accessories"],
   "page_size": 240,
   "max_pages": 1,
   "min_wait": 2.1,
@@ -53,6 +54,7 @@ There is a template you can use at `config.json.example`, just copy it to `confi
 | feed > search_term_field_name | name of the search term field in feed's json payload, default is "search_term" |
 | feed > sku_field_name | name of the sku field in feed's json payload, default is "sku" |
 | search_terms | list of terms that the tap will search for |
+| exclude_terms | list of terms that will filter out results in the search |
 | page_size | number of records to return - values can be 240,120,60 |
 | max_pages | maximum number of search result pages to capture results from, default is 1 |
 | min_wait | minimum amount of time between searches, default is 2 seconds |
@@ -132,5 +134,6 @@ Added functionality to support capturing results from multiple pages. In the `co
 **June 28, 2023**
 
 1. Changed the name of element in the output schema from *id* to *ebay_id*.
-2. Added *sku* element to the the output schema. This could correspond to an item in your product catalog.
-3. Added functionality to support getting search_terms (and skus) from a JSON feed url. (configured by setting the *feed* variable in the `config.json.example` file).
+2. Added *exclude_terms* element to the the output schema. It is an opitonal list of terms that will filter out results in the search.
+3. Added *sku* element to the the output schema. This could correspond to an item in your product catalog.
+4. Added functionality to support getting search_terms (and skus) from a JSON feed url. (configured by setting the *feed* variable in the `config.json.example` file).

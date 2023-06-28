@@ -5,6 +5,7 @@
     "sku_field_name" : "sku"
   },
   "search_terms": ["iphone 13", "iphone 14"],
+  "exclude_terms": ["case", "accessories"],
   "page_size": 240,
   "max_pages": 1,
   "min_wait": 2.1,
