@@ -131,6 +131,7 @@ Added functionality to support capturing results from multiple pages. In the `co
 
 **June 28, 2023**
 
-1. Changed the name of element in schema from *id* to *ebay_id*.
-2. Added functionality to support getting search_terms from JSON feed. (configured by setting the *feed* variable in the `config.json.example` file).
-3. As part of the part of the JSON feed, you can also supply your own sku from your catalog.
+1. Changed the name of element in the output schema from *id* to *ebay_id*.
+2. A *sku* element has been added to the the output schema - that may correspond to an item in your product catalog.
+3. Added functionality to support getting search_terms from JSON feed. (configured by setting the *feed* variable in the `config.json.example` file).
+4. As part of the part of the JSON feed, you can also supply your own sku from your catalog.
